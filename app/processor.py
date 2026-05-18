@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from enum import Enum
 from pathlib import Path
 
 from app.parser import parse_incident_file
@@ -23,9 +24,24 @@ SEV2_KEYWORDS = ("degraded", "failed", "failure", "error", "latency", "sev2")
 SEV3_KEYWORDS = ("partial", "intermittent", "warning", "retry", "sev3")
 
 
+class ProcessingMode(str, Enum):
+    DETERMINISTIC = "deterministic"
+    LLM = "llm"
+
+
 def process_incident_file(path: str | Path) -> IncidentTriage:
     parsed = parse_incident_file(path)
     return process_incident(parsed)
+
+
+def process_incident_file_with_mode(path: str | Path, mode: ProcessingMode | str = ProcessingMode.DETERMINISTIC) -> IncidentTriage:
+    processing_mode = ProcessingMode(mode)
+    if processing_mode is ProcessingMode.DETERMINISTIC:
+        return process_incident_file(path)
+
+    from app.llm_processor import process_incident_file_with_llm
+
+    return process_incident_file_with_llm(path)
 
 
 def process_incident(incident: ParsedIncident) -> IncidentTriage:

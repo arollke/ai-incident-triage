@@ -9,6 +9,7 @@ description = "Weekend MVP vertical slice for AI incident triage and learning."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "openai>=1.0,<2",
     "pydantic>=2.6,<3",
 ]
 

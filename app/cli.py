@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from app.processor import process_incident_file
+from app.processor import ProcessingMode, process_incident_file_with_mode
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -15,13 +15,19 @@ def main(argv: list[str] | None = None) -> int:
 
     ingest_parser = subparsers.add_parser("ingest", help="Parse and triage one markdown incident report.")
     ingest_parser.add_argument("file", type=Path)
+    ingest_parser.add_argument(
+        "--mode",
+        choices=[mode.value for mode in ProcessingMode],
+        default=ProcessingMode.DETERMINISTIC.value,
+        help="Processing mode to use. Defaults to deterministic.",
+    )
 
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
         try:
-            result = process_incident_file(args.file)
-        except (FileNotFoundError, ValueError, ValidationError) as exc:
+            result = process_incident_file_with_mode(args.file, args.mode)
+        except (FileNotFoundError, RuntimeError, ValueError, ValidationError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
 

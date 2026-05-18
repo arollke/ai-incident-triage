@@ -22,7 +22,8 @@ This project focuses on turning incidents into **structured, reviewable operatio
 ## Requirements
 
 - Python 3.11+
-- No secrets or external services required
+- No secrets or external services required for deterministic mode
+- `OPENAI_API_KEY` is required only for experimental LLM mode
 
 ## Install
 
@@ -42,6 +43,7 @@ Equivalent CLI usage:
 
 ```bash
 python -m app.cli ingest seed_data/incidents/payment_outage.md
+python -m app.cli ingest seed_data/incidents/payment_outage.md --mode deterministic
 ```
 
 The CLI prints pretty-formatted JSON to stdout and exits non-zero if parsing or validation fails.
@@ -57,14 +59,46 @@ make test
 - Reads markdown incident reports from `seed_data/incidents/`
 - Parses `Summary`, `Timeline`, `Impact`, `Root Cause`, `Resolution`, and `Follow-up Actions`
 - Converts parsed incidents into validated Pydantic models
-- Runs deterministic rule-based triage for:
+- Supports two processing modes:
+  - `deterministic`
+  - `llm`
+- Produces structured triage output for:
   - `summary`
   - `severity`
   - `contributing_factors`
   - `action_items`
   - `confidence`
+  - `requires_human_review`
   - `supporting_evidence`
 - Compares demo output to a golden JSON file in `seed_data/expected/`
+
+## Processing Modes
+
+### Deterministic Mode
+
+Deterministic mode is the default:
+
+```bash
+python -m app.cli ingest seed_data/incidents/payment_outage.md
+python -m app.cli ingest seed_data/incidents/payment_outage.md --mode deterministic
+```
+
+This mode uses stable rule-based extraction and classification. It does not call an LLM, does not require secrets, and is used for repeatable evals and golden tests.
+
+### LLM Mode
+
+LLM mode is experimental and human-review-first:
+
+```bash
+OPENAI_API_KEY=... python -m app.cli ingest seed_data/incidents/payment_outage.md --mode llm
+```
+
+Environment variables:
+
+- `OPENAI_API_KEY`: required for `--mode llm`
+- `INCIDENT_TRIAGE_MODEL`: optional, defaults to `gpt-4o-mini`
+
+LLM mode uses the same `IncidentTriage` Pydantic schema as deterministic mode and validates model output before printing JSON. If `OPENAI_API_KEY` is missing, the command fails safely with a clear error and non-zero exit code.
 
 ## Design Principles
 
