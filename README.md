@@ -1,8 +1,23 @@
-# AI Incident Triage
+# AI Incident Triage & Learning System
 
-Weekend MVP vertical slice for an AI Incident Triage & Learning System.
+> Production-minded system for converting engineering incident reports into structured, auditable operational insights with evals and human-in-the-loop controls.
 
-The project reads markdown incident reports, parses common post-incident sections, validates the parsed data with Pydantic, and produces deterministic structured JSON without calling an LLM or external API.
+## Why
+
+Incident reports are often inconsistent, difficult to search, and hard to learn from over time. This leads to:
+
+- repeated incidents without clear pattern detection
+- inconsistent severity classification
+- poor visibility into systemic failure modes
+- manual and subjective post-incident analysis
+
+This project focuses on turning incidents into **structured, reviewable operational intelligence**, with a strong emphasis on:
+
+- reliability engineering practices
+- deterministic processing before AI
+- evidence-grounded outputs
+- measurable quality via evals
+- safe AI adoption with human oversight
 
 ## Requirements
 
@@ -51,6 +66,15 @@ make test
   - `supporting_evidence`
 - Compares demo output to a golden JSON file in `seed_data/expected/`
 
+## Design Principles
+
+- Deterministic-first, AI-second
+- Structured outputs over free-text summaries
+- Evidence-grounded extraction
+- Human review as default
+- Eval-driven development
+- Minimal architecture (no unnecessary infrastructure)
+
 ## GitHub/Codex Cloud Setup Notes
 
 1. Create an empty GitHub repo named `ai-incident-triage`.
@@ -69,4 +93,4 @@ git push -u origin main
 
 4. In Codex Cloud, connect/select that GitHub repo as the workspace.
 
-All commands are runnable from a clean checkout after installing dependencies. The project does not rely on local absolute paths, secrets, databases, web services, LangChain, agents, or external APIs.
+All commands are runnable from a clean checkout after installing dependencies. The project deliberately avoids unnecessary infrastructure (databases, web services, agents, orchestration frameworks) to focus on correctness, determinism, and operational clarity.
