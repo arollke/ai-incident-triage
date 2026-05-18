@@ -1,0 +1,84 @@
+{
+  "summary": "Invoice email delivery was delayed and the team was not alerted automatically.",
+  "severity": {
+    "level": "sev4",
+    "rationale": "Low impact incident or informational follow-up.",
+    "confidence": 0.85,
+    "evidence": [
+      {
+        "section": "summary",
+        "text": "Invoice email delivery was delayed and the team was not alerted automatically."
+      },
+      {
+        "section": "impact",
+        "text": "Customers received invoice emails late, but invoice data remained available in the account dashboard."
+      }
+    ]
+  },
+  "contributing_factors": [
+    {
+      "description": "The delivery queue alert was missing for the invoice email worker.",
+      "category": "monitoring",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "The delivery queue alert was missing for the invoice email worker. The monitoring gap delayed detection until customer support escalated the issue."
+        }
+      ]
+    }
+  ],
+  "action_items": [
+    {
+      "description": "Add an alert for invoice email queue age.",
+      "owner": "unassigned",
+      "priority": "high",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Add an alert for invoice email queue age."
+        },
+        {
+          "section": "impact",
+          "text": "Customers received invoice emails late, but invoice data remained available in the account dashboard."
+        }
+      ]
+    },
+    {
+      "description": "Review monitoring coverage for customer notification workers.",
+      "owner": "unassigned",
+      "priority": "low",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Review monitoring coverage for customer notification workers."
+        },
+        {
+          "section": "impact",
+          "text": "Customers received invoice emails late, but invoice data remained available in the account dashboard."
+        }
+      ]
+    }
+  ],
+  "confidence": 0.85,
+  "requires_human_review": true,
+  "supporting_evidence": [
+    {
+      "section": "impact",
+      "text": "Customers received invoice emails late, but invoice data remained available in the account dashboard."
+    },
+    {
+      "section": "root_cause",
+      "text": "The delivery queue alert was missing for the invoice email worker. The monitoring gap delayed detection until customer support escalated the issue."
+    },
+    {
+      "section": "resolution",
+      "text": "The team restarted the email workers and confirmed the invoice delivery queue drained."
+    },
+    {
+      "section": "timeline",
+      "text": "07:20 UTC - Customer support reported missing invoice emails. | 07:31 UTC - Engineers found a delivery queue backlog. | 07:42 UTC - Workers were restarted. | 08:05 UTC - Email delivery backlog cleared."
+    }
+  ]
+}

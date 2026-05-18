@@ -1,4 +1,4 @@
-.PHONY: test demo
+.PHONY: test demo eval
 
 PYTHON ?= python3
 
@@ -7,3 +7,6 @@ test:
 
 demo:
 	$(PYTHON) -m app.cli ingest seed_data/incidents/payment_outage.md
+
+eval:
+	$(PYTHON) -m app.evals

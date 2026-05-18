@@ -1,0 +1,94 @@
+{
+  "summary": "Profile updates were degraded for customers after a failed deployment rollback.",
+  "severity": {
+    "level": "sev2",
+    "rationale": "Customer-facing degradation or high error rate in an important flow.",
+    "confidence": 0.85,
+    "evidence": [
+      {
+        "section": "summary",
+        "text": "Profile updates were degraded for customers after a failed deployment rollback."
+      },
+      {
+        "section": "impact",
+        "text": "Customers could not reliably save profile changes for 29 minutes. Approximately 9% of profile update requests failed."
+      }
+    ]
+  },
+  "contributing_factors": [
+    {
+      "description": "A deployment changed feature flag routing for the profile service.",
+      "category": "deployment",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "A deployment changed feature flag routing for the profile service. The rollback procedure was missing a step to restore the previous flag configuration and caused continued request failures."
+        }
+      ]
+    },
+    {
+      "description": "The rollback procedure was missing a step to restore the previous flag configuration and caused continued request failures.",
+      "category": "deployment",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "A deployment changed feature flag routing for the profile service. The rollback procedure was missing a step to restore the previous flag configuration and caused continued request failures."
+        }
+      ]
+    }
+  ],
+  "action_items": [
+    {
+      "description": "Add a pre-deploy validation check for profile feature flag routing.",
+      "owner": "unassigned",
+      "priority": "high",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Add a pre-deploy validation check for profile feature flag routing."
+        },
+        {
+          "section": "root_cause",
+          "text": "A deployment changed feature flag routing for the profile service. The rollback procedure was missing a step to restore the previous flag configuration and caused continued request failures."
+        }
+      ]
+    },
+    {
+      "description": "Document the rollback procedure for profile service releases.",
+      "owner": "unassigned",
+      "priority": "medium",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Document the rollback procedure for profile service releases."
+        },
+        {
+          "section": "root_cause",
+          "text": "A deployment changed feature flag routing for the profile service. The rollback procedure was missing a step to restore the previous flag configuration and caused continued request failures."
+        }
+      ]
+    }
+  ],
+  "confidence": 0.85,
+  "requires_human_review": true,
+  "supporting_evidence": [
+    {
+      "section": "impact",
+      "text": "Customers could not reliably save profile changes for 29 minutes. Approximately 9% of profile update requests failed."
+    },
+    {
+      "section": "root_cause",
+      "text": "A deployment changed feature flag routing for the profile service. The rollback procedure was missing a step to restore the previous flag configuration and caused continued request failures."
+    },
+    {
+      "section": "resolution",
+      "text": "The team restored the previous feature flag configuration and verified successful profile updates."
+    },
+    {
+      "section": "timeline",
+      "text": "14:03 UTC - Deployment completed for the profile service. | 14:09 UTC - Error rate alert fired for profile update requests. | 14:18 UTC - Team attempted rollback and saw the same errors. | 14:31 UTC - Feature flag routing was restored. | 14:38 UTC - Profile update error rate returned to normal."
+    }
+  ]
+}

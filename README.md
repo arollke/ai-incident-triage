@@ -54,6 +54,25 @@ The CLI prints pretty-formatted JSON to stdout and exits non-zero if parsing or 
 make test
 ```
 
+## Eval
+
+```bash
+make eval
+```
+
+The offline eval runner uses deterministic mode only. It reads markdown incidents from `seed_data/incidents/`, compares structured outputs against matching JSON fixtures in `seed_data/expected/`, prints a readable summary, and writes `reports/eval_report.json`.
+
+The eval measures:
+
+- `total_incidents`
+- `schema_valid_count`
+- `exact_match_count`
+- `severity_accuracy`
+- `action_item_count_matches`
+- `evidence_present_rate`
+
+Deterministic mode is used for repeatable evals because the same input should produce the same structured output every run. LLM mode remains experimental and is intentionally excluded from offline evals until there is a stable review and scoring workflow.
+
 ## What It Does
 
 - Reads markdown incident reports from `seed_data/incidents/`
@@ -71,6 +90,7 @@ make test
   - `requires_human_review`
   - `supporting_evidence`
 - Compares demo output to a golden JSON file in `seed_data/expected/`
+- Runs offline deterministic evals against all expected fixtures
 
 ## Processing Modes
 

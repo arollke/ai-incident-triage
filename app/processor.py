@@ -76,6 +76,9 @@ def _assess_severity(incident: ParsedIncident, confidence: float) -> SeverityAss
 
 
 def _infer_severity(incident: ParsedIncident) -> Severity:
+    if _is_internal_only_impact(incident.impact):
+        return Severity.SEV3
+
     text = " ".join(
         [
             incident.summary,
@@ -91,6 +94,11 @@ def _infer_severity(incident: ParsedIncident) -> Severity:
     if any(keyword in text for keyword in SEV3_KEYWORDS):
         return Severity.SEV3
     return Severity.SEV4
+
+
+def _is_internal_only_impact(impact: str) -> bool:
+    lowered = impact.lower()
+    return "internal" in lowered and "no customer-facing" in lowered
 
 
 def _severity_rationale(severity: Severity) -> str:

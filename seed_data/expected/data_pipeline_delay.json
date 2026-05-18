@@ -1,0 +1,80 @@
+{
+  "summary": "Daily analytics dashboards were delayed after the reporting pipeline retried a failed batch.",
+  "severity": {
+    "level": "sev3",
+    "rationale": "Partial or intermittent impact with available workaround or limited blast radius.",
+    "confidence": 0.85,
+    "evidence": [
+      {
+        "section": "summary",
+        "text": "Daily analytics dashboards were delayed after the reporting pipeline retried a failed batch."
+      },
+      {
+        "section": "impact",
+        "text": "Internal teams saw stale analytics dashboards for 79 minutes. No customer-facing systems were impacted."
+      }
+    ]
+  },
+  "contributing_factors": [
+    {
+      "description": "The reporting pipeline failed because a warehouse export dependency timed out.",
+      "category": "dependency",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "The reporting pipeline failed because a warehouse export dependency timed out. The retry process completed successfully but delayed dashboard freshness."
+        }
+      ]
+    }
+  ],
+  "action_items": [
+    {
+      "description": "Add an alert for reporting pipeline export duration.",
+      "owner": "unassigned",
+      "priority": "high",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Add an alert for reporting pipeline export duration."
+        },
+        {
+          "section": "impact",
+          "text": "Internal teams saw stale analytics dashboards for 79 minutes. No customer-facing systems were impacted."
+        }
+      ]
+    },
+    {
+      "description": "Document the retry process for warehouse export delays.",
+      "owner": "unassigned",
+      "priority": "medium",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Document the retry process for warehouse export delays."
+        }
+      ]
+    }
+  ],
+  "confidence": 0.85,
+  "requires_human_review": true,
+  "supporting_evidence": [
+    {
+      "section": "impact",
+      "text": "Internal teams saw stale analytics dashboards for 79 minutes. No customer-facing systems were impacted."
+    },
+    {
+      "section": "root_cause",
+      "text": "The reporting pipeline failed because a warehouse export dependency timed out. The retry process completed successfully but delayed dashboard freshness."
+    },
+    {
+      "section": "resolution",
+      "text": "The team allowed the retry to complete and verified dashboard data freshness after the export finished."
+    },
+    {
+      "section": "timeline",
+      "text": "02:05 UTC - Batch job failed during warehouse export. | 02:18 UTC - Retry started automatically. | 03:06 UTC - Export completed. | 03:24 UTC - Dashboards refreshed with current data."
+    }
+  ]
+}

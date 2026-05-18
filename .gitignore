@@ -26,6 +26,9 @@ dist/
 .eggs/
 *.egg
 
+# Generated reports
+reports/eval_report.json
+
 # Tooling and editor files
 .idea/
 .vscode/

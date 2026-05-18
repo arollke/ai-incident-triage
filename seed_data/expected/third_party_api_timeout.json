@@ -1,0 +1,80 @@
+{
+  "summary": "Shipping quotes were delayed because a third-party carrier API had intermittent timeouts.",
+  "severity": {
+    "level": "sev2",
+    "rationale": "Customer-facing degradation or high error rate in an important flow.",
+    "confidence": 0.85,
+    "evidence": [
+      {
+        "section": "summary",
+        "text": "Shipping quotes were delayed because a third-party carrier API had intermittent timeouts."
+      },
+      {
+        "section": "impact",
+        "text": "Customers saw delayed shipping quotes during checkout, but orders could still be completed."
+      }
+    ]
+  },
+  "contributing_factors": [
+    {
+      "description": "Missing retry backoff caused requests to wait too long before failing over to cached quotes.",
+      "category": "unknown",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "The carrier API dependency returned intermittent timeout errors. Missing retry backoff caused requests to wait too long before failing over to cached quotes."
+        }
+      ]
+    }
+  ],
+  "action_items": [
+    {
+      "description": "Add an alert for carrier API timeout rate.",
+      "owner": "unassigned",
+      "priority": "high",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Add an alert for carrier API timeout rate."
+        },
+        {
+          "section": "impact",
+          "text": "Customers saw delayed shipping quotes during checkout, but orders could still be completed."
+        }
+      ]
+    },
+    {
+      "description": "Document fallback behavior for shipping quote dependencies.",
+      "owner": "unassigned",
+      "priority": "medium",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Document fallback behavior for shipping quote dependencies."
+        }
+      ]
+    }
+  ],
+  "confidence": 0.85,
+  "requires_human_review": true,
+  "supporting_evidence": [
+    {
+      "section": "impact",
+      "text": "Customers saw delayed shipping quotes during checkout, but orders could still be completed."
+    },
+    {
+      "section": "root_cause",
+      "text": "The carrier API dependency returned intermittent timeout errors. Missing retry backoff caused requests to wait too long before failing over to cached quotes."
+    },
+    {
+      "section": "resolution",
+      "text": "The team adjusted timeout and retry settings and verified cached quote fallback behavior."
+    },
+    {
+      "section": "timeline",
+      "text": "16:11 UTC - Support reported delayed shipping quotes. | 16:17 UTC - Engineers confirmed elevated timeout errors from the carrier API. | 16:29 UTC - Timeout threshold and retry settings were adjusted. | 16:43 UTC - Shipping quote latency returned to normal."
+    }
+  ]
+}
