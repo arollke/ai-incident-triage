@@ -1,0 +1,114 @@
+{
+  "summary": "Checkout payments were unavailable for customers in the US region for 42 minutes on Saturday morning.",
+  "severity": {
+    "level": "sev1",
+    "rationale": "Customer-facing outage or complete inability to use a critical flow.",
+    "confidence": 0.85,
+    "evidence": [
+      {
+        "section": "summary",
+        "text": "Checkout payments were unavailable for customers in the US region for 42 minutes on Saturday morning."
+      },
+      {
+        "section": "impact",
+        "text": "Customers in the US region could not complete card payments during the incident. Approximately 18% of checkout attempts failed."
+      }
+    ]
+  },
+  "contributing_factors": [
+    {
+      "description": "A deployment changed the payment gateway connection pool limit from 100 to 20.",
+      "category": "deployment",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "A deployment changed the payment gateway connection pool limit from 100 to 20. The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail."
+        }
+      ]
+    },
+    {
+      "description": "The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail.",
+      "category": "capacity",
+      "evidence": [
+        {
+          "section": "root_cause",
+          "text": "A deployment changed the payment gateway connection pool limit from 100 to 20. The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail."
+        }
+      ]
+    }
+  ],
+  "action_items": [
+    {
+      "description": "Add a pre-deploy configuration check for payment gateway pool limits.",
+      "owner": "unassigned",
+      "priority": "high",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Add a pre-deploy configuration check for payment gateway pool limits."
+        },
+        {
+          "section": "root_cause",
+          "text": "A deployment changed the payment gateway connection pool limit from 100 to 20. The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail."
+        }
+      ]
+    },
+    {
+      "description": "Add an alert for connection pool saturation before customer-facing failures occur.",
+      "owner": "unassigned",
+      "priority": "high",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Add an alert for connection pool saturation before customer-facing failures occur."
+        },
+        {
+          "section": "root_cause",
+          "text": "A deployment changed the payment gateway connection pool limit from 100 to 20. The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail."
+        },
+        {
+          "section": "impact",
+          "text": "Customers in the US region could not complete card payments during the incident. Approximately 18% of checkout attempts failed."
+        }
+      ]
+    },
+    {
+      "description": "Document the rollback procedure for payment gateway configuration changes.",
+      "owner": "unassigned",
+      "priority": "medium",
+      "status": "open",
+      "evidence": [
+        {
+          "section": "follow_up_actions",
+          "text": "Document the rollback procedure for payment gateway configuration changes."
+        },
+        {
+          "section": "root_cause",
+          "text": "A deployment changed the payment gateway connection pool limit from 100 to 20. The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail."
+        }
+      ]
+    }
+  ],
+  "confidence": 0.85,
+  "requires_human_review": true,
+  "supporting_evidence": [
+    {
+      "section": "impact",
+      "text": "Customers in the US region could not complete card payments during the incident. Approximately 18% of checkout attempts failed."
+    },
+    {
+      "section": "root_cause",
+      "text": "A deployment changed the payment gateway connection pool limit from 100 to 20. The lower limit exhausted available connections during normal Saturday traffic and caused payment authorization requests to fail."
+    },
+    {
+      "section": "resolution",
+      "text": "The team rolled back the connection pool configuration and verified payment authorization success rates recovered."
+    },
+    {
+      "section": "timeline",
+      "text": "09:02 UTC - Alert fired for elevated payment authorization failures. | 09:07 UTC - On-call engineer confirmed checkout payment attempts were failing. | 09:19 UTC - Payment gateway connection pool saturation identified. | 09:34 UTC - Connection pool configuration rolled back. | 09:44 UTC - Payment authorization success rate returned to normal."
+    }
+  ]
+}
