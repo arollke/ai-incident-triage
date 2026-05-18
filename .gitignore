@@ -36,3 +36,11 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# AI tooling
+.codex/
+.cursor/
+.aider*
+notes/
+local_prompts/
+EOF
