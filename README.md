@@ -60,7 +60,7 @@ make test
 make eval
 ```
 
-The offline eval runner uses deterministic mode only. It reads markdown incidents from `seed_data/incidents/`, compares structured outputs against matching JSON fixtures in `seed_data/expected/`, prints a readable summary, and writes `reports/eval_report.json`.
+The offline eval runner uses deterministic mode only. It reads markdown incidents from `seed_data/incidents/`, compares structured outputs against matching JSON fixtures in `seed_data/expected/`, prints a readable summary, applies quality gates, and writes `reports/eval_report.json`.
 
 The eval measures:
 
@@ -70,8 +70,17 @@ The eval measures:
 - `severity_accuracy`
 - `action_item_count_matches`
 - `evidence_present_rate`
+- `quality_gates_passed`
+- `quality_gate_failures`
 
-Deterministic mode is used for repeatable evals because the same input should produce the same structured output every run. LLM mode remains experimental and is intentionally excluded from offline evals until there is a stable review and scoring workflow.
+Quality gates fail `make eval` if:
+
+- `severity_accuracy` is below `0.80`
+- `evidence_present_rate` is below `0.90`
+- `schema_valid_count` does not equal `total_incidents`
+- `exact_match_count` does not equal `total_incidents`
+
+Deterministic mode is used for repeatable evals because the same input should produce the same structured output every run. These gates protect the deterministic baseline before adding more AI sophistication, making regressions visible before experimental LLM behavior is introduced. LLM mode remains experimental and is intentionally excluded from offline evals until there is a stable review and scoring workflow.
 
 ## What It Does
 

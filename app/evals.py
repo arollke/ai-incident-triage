@@ -12,6 +12,8 @@ from app.schemas import IncidentTriage
 DEFAULT_INCIDENTS_DIR = Path("seed_data/incidents")
 DEFAULT_EXPECTED_DIR = Path("seed_data/expected")
 DEFAULT_REPORT_PATH = Path("reports/eval_report.json")
+MIN_SEVERITY_ACCURACY = 0.80
+MIN_EVIDENCE_PRESENT_RATE = 0.90
 
 
 class IncidentEvalResult(BaseModel):
@@ -35,6 +37,8 @@ class EvalReport(BaseModel):
     severity_accuracy: float = Field(ge=0.0, le=1.0)
     action_item_count_matches: int
     evidence_present_rate: float = Field(ge=0.0, le=1.0)
+    quality_gates_passed: bool
+    quality_gate_failures: list[str] = Field(default_factory=list)
     results: list[IncidentEvalResult] = Field(default_factory=list)
 
 
@@ -53,7 +57,7 @@ def run_evals(
 def main() -> int:
     report = run_evals()
     print(_format_report(report))
-    return 0 if report.exact_match_count == report.total_incidents else 1
+    return 0 if report.quality_gates_passed else 1
 
 
 def _evaluate_incident(incident_path: Path, expected_path: Path) -> IncidentEvalResult:
@@ -97,16 +101,33 @@ def _build_report(results: list[IncidentEvalResult]) -> EvalReport:
             severity_accuracy=0.0,
             action_item_count_matches=0,
             evidence_present_rate=0.0,
+            quality_gates_passed=False,
+            quality_gate_failures=["no incidents found"],
             results=[],
         )
 
+    schema_valid_count = sum(result.schema_valid for result in results)
+    exact_match_count = sum(result.exact_match for result in results)
+    severity_accuracy = round(sum(result.severity_match for result in results) / total, 2)
+    action_item_count_matches = sum(result.action_item_count_matches for result in results)
+    evidence_present_rate = round(sum(result.evidence_present for result in results) / total, 2)
+    quality_gate_failures = _quality_gate_failures(
+        total_incidents=total,
+        schema_valid_count=schema_valid_count,
+        exact_match_count=exact_match_count,
+        severity_accuracy=severity_accuracy,
+        evidence_present_rate=evidence_present_rate,
+    )
+
     return EvalReport(
         total_incidents=total,
-        schema_valid_count=sum(result.schema_valid for result in results),
-        exact_match_count=sum(result.exact_match for result in results),
-        severity_accuracy=round(sum(result.severity_match for result in results) / total, 2),
-        action_item_count_matches=sum(result.action_item_count_matches for result in results),
-        evidence_present_rate=round(sum(result.evidence_present for result in results) / total, 2),
+        schema_valid_count=schema_valid_count,
+        exact_match_count=exact_match_count,
+        severity_accuracy=severity_accuracy,
+        action_item_count_matches=action_item_count_matches,
+        evidence_present_rate=evidence_present_rate,
+        quality_gates_passed=not quality_gate_failures,
+        quality_gate_failures=quality_gate_failures,
         results=results,
     )
 
@@ -126,7 +147,18 @@ def _format_report(report: EvalReport) -> str:
         f"severity_accuracy: {report.severity_accuracy:.2f}",
         f"action_item_count_matches: {report.action_item_count_matches}",
         f"evidence_present_rate: {report.evidence_present_rate:.2f}",
+        "",
+        "Quality Gates",
+        "-------------",
+        f"quality_gates_passed: {str(report.quality_gates_passed).lower()}",
     ]
+
+    if report.quality_gate_failures:
+        lines.append("quality_gate_failures:")
+        for failure in report.quality_gate_failures:
+            lines.append(f"- {failure}")
+    else:
+        lines.append("quality_gate_failures: none")
 
     failures = [result for result in report.results if result.error or not result.exact_match]
     if failures:
@@ -137,6 +169,27 @@ def _format_report(report: EvalReport) -> str:
             lines.append(f"- {result.incident}: {detail}")
 
     return "\n".join(lines)
+
+
+def _quality_gate_failures(
+    total_incidents: int,
+    schema_valid_count: int,
+    exact_match_count: int,
+    severity_accuracy: float,
+    evidence_present_rate: float,
+) -> list[str]:
+    failures: list[str] = []
+
+    if schema_valid_count != total_incidents:
+        failures.append(f"schema_valid_count {schema_valid_count} != total_incidents {total_incidents}")
+    if exact_match_count != total_incidents:
+        failures.append(f"exact_match_count {exact_match_count} != total_incidents {total_incidents}")
+    if severity_accuracy < MIN_SEVERITY_ACCURACY:
+        failures.append(f"severity_accuracy {severity_accuracy:.2f} < {MIN_SEVERITY_ACCURACY:.2f}")
+    if evidence_present_rate < MIN_EVIDENCE_PRESENT_RATE:
+        failures.append(f"evidence_present_rate {evidence_present_rate:.2f} < {MIN_EVIDENCE_PRESENT_RATE:.2f}")
+
+    return failures
 
 
 def _has_evidence(triage: IncidentTriage) -> bool:
