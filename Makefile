@@ -1,4 +1,4 @@
-.PHONY: test demo eval
+.PHONY: test demo eval eval-llm
 
 PYTHON ?= python3
 
@@ -10,3 +10,6 @@ demo:
 
 eval:
 	$(PYTHON) -m app.evals
+
+eval-llm:
+	$(PYTHON) -m app.llm_evals

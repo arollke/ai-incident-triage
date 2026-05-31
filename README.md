@@ -62,6 +62,8 @@ make eval
 
 The offline eval runner uses deterministic mode only. It reads markdown incidents from `seed_data/incidents/`, compares structured outputs against matching JSON fixtures in `seed_data/expected/`, prints a readable summary, applies quality gates, and writes `reports/eval_report.json`.
 
+Deterministic evals are CI-safe: they do not require secrets, network access, or external services, and the same input should produce the same structured output every run.
+
 The eval measures:
 
 - `total_incidents`
@@ -80,7 +82,27 @@ Quality gates fail `make eval` if:
 - `schema_valid_count` does not equal `total_incidents`
 - `exact_match_count` does not equal `total_incidents`
 
-Deterministic mode is used for repeatable evals because the same input should produce the same structured output every run. These gates protect the deterministic baseline before adding more AI sophistication, making regressions visible before experimental LLM behavior is introduced. LLM mode remains experimental and is intentionally excluded from offline evals until there is a stable review and scoring workflow.
+These gates protect the deterministic baseline before adding more AI sophistication, making regressions visible before experimental LLM behavior is introduced.
+
+### Experimental LLM Eval
+
+```bash
+OPENAI_API_KEY=... make eval-llm
+```
+
+`make eval-llm` is experimental and is not required for CI. It requires `OPENAI_API_KEY`, calls the LLM processor for each incident, validates the LLM output against the `IncidentTriage` schema, compares LLM output against the expected fixtures, and compares LLM output against deterministic output. It writes `reports/llm_eval_report.json` and prints a readable summary.
+
+The LLM eval reports:
+
+- `total_incidents`
+- `llm_schema_valid_count`
+- `llm_severity_accuracy_against_expected`
+- `llm_severity_agreement_with_deterministic`
+- `llm_action_item_count_matches_expected`
+- `llm_evidence_present_rate`
+- `llm_human_review_rate`
+- `llm_quality_gates_passed`
+- `llm_quality_gate_failures`
 
 ## What It Does
 
@@ -100,6 +122,7 @@ Deterministic mode is used for repeatable evals because the same input should pr
   - `supporting_evidence`
 - Compares demo output to a golden JSON file in `seed_data/expected/`
 - Runs offline deterministic evals against all expected fixtures
+- Runs optional experimental LLM comparison evals when `OPENAI_API_KEY` is configured
 
 ## Processing Modes
 
