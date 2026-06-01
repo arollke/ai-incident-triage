@@ -46,3 +46,6 @@ Thumbs.db
 .aider*
 notes/
 local_prompts/
+
+# field test data
+field_tests/

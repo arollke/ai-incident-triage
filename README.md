@@ -92,7 +92,7 @@ OPENAI_API_KEY=... make eval-llm
 
 `make eval-llm` is experimental and is not required for CI. It requires `OPENAI_API_KEY`, calls the LLM processor for each incident, validates the LLM output against the `IncidentTriage` schema, compares LLM output against the expected fixtures, and compares LLM output against deterministic output. It writes `reports/llm_eval_report.json` and prints a readable summary.
 
-LLM evals do not require exact fixture matches. Instead, their quality gates check minimum safety and quality expectations: every LLM output must be schema-valid, at least `0.80` of incidents must include evidence throughout the triage output, and at least `0.80` must keep the human-review-first behavior by setting `requires_human_review`.
+LLM evals do not require exact fixture matches. Instead, their quality gates check minimum safety and quality expectations: every LLM output must be schema-valid, at least `0.80` of incidents must include evidence throughout the triage output, at least `0.80` must keep the human-review-first behavior by setting `requires_human_review`, and action item owners must not be invented.
 
 The LLM eval reports:
 
@@ -103,11 +103,14 @@ The LLM eval reports:
 - `llm_action_item_count_matches_expected`
 - `llm_evidence_present_rate`
 - `llm_human_review_rate`
+- `llm_owner_hallucination_count`
 - `llm_quality_gates_passed`
 - `llm_quality_gate_failures`
 - `model_name`
 - `prompt_version`
 - `run_timestamp_utc`
+
+The owner hallucination check flags an incident when an action item owner is not `unassigned` and the owner string does not appear in the source incident markdown. The LLM quality gate requires `llm_owner_hallucination_count == 0`.
 
 ## What It Does
 

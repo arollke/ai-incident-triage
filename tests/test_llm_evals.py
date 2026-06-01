@@ -27,6 +27,7 @@ def test_llm_eval_aggregation_works_with_mocked_llm_results():
                 llm_action_item_count_matches_expected=True,
                 llm_evidence_present=True,
                 llm_requires_human_review=True,
+                owner_hallucination_detected=False,
             ),
             LlmIncidentEvalResult(
                 incident="two.md",
@@ -36,6 +37,7 @@ def test_llm_eval_aggregation_works_with_mocked_llm_results():
                 llm_action_item_count_matches_expected=False,
                 llm_evidence_present=False,
                 llm_requires_human_review=False,
+                owner_hallucination_detected=False,
             ),
         ]
     )
@@ -47,6 +49,7 @@ def test_llm_eval_aggregation_works_with_mocked_llm_results():
     assert report.llm_action_item_count_matches_expected == 1
     assert report.llm_evidence_present_rate == 0.5
     assert report.llm_human_review_rate == 0.5
+    assert report.llm_owner_hallucination_count == 0
     assert report.llm_quality_gates_passed is False
     assert "llm_evidence_present_rate 0.50 < 0.80" in report.llm_quality_gate_failures
     assert "llm_human_review_rate 0.50 < 0.80" in report.llm_quality_gate_failures
@@ -77,6 +80,7 @@ def test_llm_eval_runner_uses_mocked_llm_processor(monkeypatch, tmp_path):
     assert report.llm_action_item_count_matches_expected == 5
     assert report.llm_evidence_present_rate == 1.0
     assert report.llm_human_review_rate == 1.0
+    assert report.llm_owner_hallucination_count == 0
     assert report.llm_quality_gates_passed is True
     assert report.llm_quality_gate_failures == []
 
@@ -92,6 +96,7 @@ def test_llm_eval_quality_gate_failure_for_invalid_schema_count():
                 llm_action_item_count_matches_expected=False,
                 llm_evidence_present=False,
                 llm_requires_human_review=False,
+                owner_hallucination_detected=False,
                 error="invalid schema",
             )
         ]
@@ -99,6 +104,32 @@ def test_llm_eval_quality_gate_failure_for_invalid_schema_count():
 
     assert report.llm_quality_gates_passed is False
     assert "llm_schema_valid_count 0 != total_incidents 1" in report.llm_quality_gate_failures
+
+
+def test_llm_eval_detects_hallucinated_action_item_owner(monkeypatch, tmp_path):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    report_path = tmp_path / "reports" / "llm_eval_report.json"
+
+    def mocked_llm_processor(path: Path) -> IncidentTriage:
+        expected_path = Path("seed_data/expected") / f"{path.stem}.json"
+        triage = IncidentTriage.model_validate_json(expected_path.read_text(encoding="utf-8"))
+        action_items = [
+            triage.action_items[0].model_copy(update={"owner": "Reliability Squad XYZ"}),
+            *triage.action_items[1:],
+        ]
+        return triage.model_copy(update={"action_items": action_items})
+
+    report = run_llm_evals(
+        incidents_dir=Path("seed_data/incidents"),
+        expected_dir=Path("seed_data/expected"),
+        report_path=report_path,
+        llm_processor=mocked_llm_processor,
+    )
+
+    assert report.llm_owner_hallucination_count == 5
+    assert all(result.owner_hallucination_detected for result in report.results)
+    assert report.llm_quality_gates_passed is False
+    assert "llm_owner_hallucination_count 5 != 0" in report.llm_quality_gate_failures
 
 
 def test_llm_eval_format_prints_quality_gates():
@@ -112,6 +143,7 @@ def test_llm_eval_format_prints_quality_gates():
                 llm_action_item_count_matches_expected=True,
                 llm_evidence_present=True,
                 llm_requires_human_review=True,
+                owner_hallucination_detected=False,
             )
         ]
     )
@@ -124,6 +156,7 @@ def test_llm_eval_format_prints_quality_gates():
     assert "LLM Quality Gates" in formatted
     assert "llm_quality_gates_passed: true" in formatted
     assert "llm_quality_gate_failures: none" in formatted
+    assert "llm_owner_hallucination_count: 0" in formatted
 
 
 def test_llm_eval_main_fails_when_quality_gates_fail(monkeypatch, capsys):
@@ -137,6 +170,7 @@ def test_llm_eval_main_fails_when_quality_gates_fail(monkeypatch, capsys):
                 llm_action_item_count_matches_expected=True,
                 llm_evidence_present=False,
                 llm_requires_human_review=False,
+                owner_hallucination_detected=False,
             )
         ]
     )
@@ -161,6 +195,7 @@ def test_llm_eval_main_fails_when_incident_error_exists(monkeypatch, capsys):
                 llm_action_item_count_matches_expected=True,
                 llm_evidence_present=True,
                 llm_requires_human_review=True,
+                owner_hallucination_detected=False,
                 error="provider failed after validation",
             )
         ]

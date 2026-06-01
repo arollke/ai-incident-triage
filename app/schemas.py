@@ -58,7 +58,7 @@ class SeverityAssessment(BaseModel):
     level: Severity
     rationale: str = Field(min_length=1)
     confidence: float = Field(ge=0.0, le=1.0)
-    evidence: list[SupportingEvidence] = Field(default_factory=list)
+    evidence: list[SupportingEvidence]
 
 
 class ContributingFactor(BaseModel):
@@ -66,17 +66,17 @@ class ContributingFactor(BaseModel):
 
     description: str = Field(min_length=1)
     category: ContributingFactorCategory
-    evidence: list[SupportingEvidence] = Field(default_factory=list)
+    evidence: list[SupportingEvidence]
 
 
 class ActionItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     description: str = Field(min_length=1)
-    owner: str = "unassigned"
+    owner: str = Field(min_length=1)
     priority: ActionItemPriority
     status: ActionItemStatus
-    evidence: list[SupportingEvidence] = Field(default_factory=list)
+    evidence: list[SupportingEvidence]
 
 
 class IncidentTriage(BaseModel):
@@ -84,8 +84,8 @@ class IncidentTriage(BaseModel):
 
     summary: str = Field(min_length=1)
     severity: SeverityAssessment
-    contributing_factors: list[ContributingFactor] = Field(default_factory=list)
-    action_items: list[ActionItem] = Field(default_factory=list)
+    contributing_factors: list[ContributingFactor]
+    action_items: list[ActionItem]
     confidence: float = Field(ge=0.0, le=1.0)
     requires_human_review: bool
-    supporting_evidence: list[SupportingEvidence] = Field(default_factory=list)
+    supporting_evidence: list[SupportingEvidence]

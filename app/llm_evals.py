@@ -30,6 +30,7 @@ class LlmIncidentEvalResult(BaseModel):
     llm_action_item_count_matches_expected: bool
     llm_evidence_present: bool
     llm_requires_human_review: bool
+    owner_hallucination_detected: bool
     error: str | None = None
 
 
@@ -46,6 +47,7 @@ class LlmEvalReport(BaseModel):
     llm_action_item_count_matches_expected: int
     llm_evidence_present_rate: float = Field(ge=0.0, le=1.0)
     llm_human_review_rate: float = Field(ge=0.0, le=1.0)
+    llm_owner_hallucination_count: int
     llm_quality_gates_passed: bool
     llm_quality_gate_failures: list[str] = Field(default_factory=list)
     results: list[LlmIncidentEvalResult] = Field(default_factory=list)
@@ -103,6 +105,7 @@ def _evaluate_llm_incident(
         deterministic = process_incident_file(incident_path)
         expected = IncidentTriage.model_validate_json(expected_path.read_text(encoding="utf-8"))
         llm_output = IncidentTriage.model_validate(llm_processor(incident_path))
+        source_text = incident_path.read_text(encoding="utf-8")
 
         return LlmIncidentEvalResult(
             incident=incident_path.name,
@@ -112,6 +115,7 @@ def _evaluate_llm_incident(
             llm_action_item_count_matches_expected=len(llm_output.action_items) == len(expected.action_items),
             llm_evidence_present=_has_evidence(llm_output),
             llm_requires_human_review=llm_output.requires_human_review,
+            owner_hallucination_detected=_has_owner_hallucination(llm_output, source_text),
         )
     except (FileNotFoundError, OSError, ValueError, ValidationError, RuntimeError) as exc:
         return LlmIncidentEvalResult(
@@ -122,6 +126,7 @@ def _evaluate_llm_incident(
             llm_action_item_count_matches_expected=False,
             llm_evidence_present=False,
             llm_requires_human_review=False,
+            owner_hallucination_detected=False,
             error=str(exc),
         )
 
@@ -134,6 +139,7 @@ def _build_llm_report(results: list[LlmIncidentEvalResult]) -> LlmEvalReport:
             llm_schema_valid_count=0,
             llm_evidence_present_rate=0.0,
             llm_human_review_rate=0.0,
+            llm_owner_hallucination_count=0,
         )
         return LlmEvalReport(
             model_name=_llm_model_name(),
@@ -146,6 +152,7 @@ def _build_llm_report(results: list[LlmIncidentEvalResult]) -> LlmEvalReport:
             llm_action_item_count_matches_expected=0,
             llm_evidence_present_rate=0.0,
             llm_human_review_rate=0.0,
+            llm_owner_hallucination_count=0,
             llm_quality_gates_passed=not quality_gate_failures,
             llm_quality_gate_failures=quality_gate_failures,
             results=[],
@@ -154,11 +161,13 @@ def _build_llm_report(results: list[LlmIncidentEvalResult]) -> LlmEvalReport:
     llm_schema_valid_count = sum(result.llm_schema_valid for result in results)
     llm_evidence_present_rate = round(sum(result.llm_evidence_present for result in results) / total, 2)
     llm_human_review_rate = round(sum(result.llm_requires_human_review for result in results) / total, 2)
+    llm_owner_hallucination_count = sum(result.owner_hallucination_detected for result in results)
     quality_gate_failures = _llm_quality_gate_failures(
         total_incidents=total,
         llm_schema_valid_count=llm_schema_valid_count,
         llm_evidence_present_rate=llm_evidence_present_rate,
         llm_human_review_rate=llm_human_review_rate,
+        llm_owner_hallucination_count=llm_owner_hallucination_count,
     )
 
     return LlmEvalReport(
@@ -180,6 +189,7 @@ def _build_llm_report(results: list[LlmIncidentEvalResult]) -> LlmEvalReport:
         ),
         llm_evidence_present_rate=llm_evidence_present_rate,
         llm_human_review_rate=llm_human_review_rate,
+        llm_owner_hallucination_count=llm_owner_hallucination_count,
         llm_quality_gates_passed=not quality_gate_failures,
         llm_quality_gate_failures=quality_gate_failures,
         results=results,
@@ -214,6 +224,7 @@ def _format_llm_report(report: LlmEvalReport) -> str:
         ),
         f"llm_evidence_present_rate: {report.llm_evidence_present_rate:.2f}",
         f"llm_human_review_rate: {report.llm_human_review_rate:.2f}",
+        f"llm_owner_hallucination_count: {report.llm_owner_hallucination_count}",
         "",
         "LLM Quality Gates",
         "-----------------",
@@ -244,7 +255,8 @@ def _format_llm_report(report: LlmEvalReport) -> str:
             f"severity_deterministic={str(result.llm_severity_matches_deterministic).lower()}, "
             f"action_count_expected={str(result.llm_action_item_count_matches_expected).lower()}, "
             f"evidence_present={str(result.llm_evidence_present).lower()}, "
-            f"requires_human_review={str(result.llm_requires_human_review).lower()}"
+            f"requires_human_review={str(result.llm_requires_human_review).lower()}, "
+            f"owner_hallucination={str(result.owner_hallucination_detected).lower()}"
         )
         if result.error:
             lines.append(f"  error: {result.error}")
@@ -257,6 +269,7 @@ def _llm_quality_gate_failures(
     llm_schema_valid_count: int,
     llm_evidence_present_rate: float,
     llm_human_review_rate: float,
+    llm_owner_hallucination_count: int,
 ) -> list[str]:
     failures: list[str] = []
 
@@ -274,8 +287,35 @@ def _llm_quality_gate_failures(
             f"llm_human_review_rate {llm_human_review_rate:.2f} < "
             f"{MIN_LLM_HUMAN_REVIEW_RATE:.2f}"
         )
+    if llm_owner_hallucination_count != 0:
+        failures.append(f"llm_owner_hallucination_count {llm_owner_hallucination_count} != 0")
 
     return failures
+
+
+def _owner_hallucination_detected(triage: IncidentTriage, source_text: str) -> bool:
+    normalized_source = source_text.casefold()
+    return any(
+        action.owner != "unassigned" and action.owner.casefold() not in normalized_source
+        for action in triage.action_items
+    )
+
+def _has_owner_hallucination(
+    triage: IncidentTriage,
+    source_text: str,
+) -> bool:
+    lowered = source_text.lower()
+
+    for item in triage.action_items:
+        owner = item.owner.strip()
+
+        if owner == "unassigned":
+            continue
+
+        if owner.lower() not in lowered:
+            return True
+
+    return False
 
 
 def _llm_model_name() -> str:

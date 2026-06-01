@@ -35,7 +35,8 @@ def process_incident_with_llm(incident: ParsedIncident) -> IncidentTriage:
                 "role": "system",
                 "content": (
                     "You are an incident triage assistant. Return only structured JSON that conforms "
-                    "to the provided schema. Keep the output evidence-grounded and human-review-first."
+                    "to the provided schema. Keep the output evidence-grounded and human-review-first. "
+                    "Never infer or invent owners, action statuses, facts, or resolutions."
                 ),
             },
             {
@@ -61,7 +62,22 @@ def _incident_prompt(incident: ParsedIncident) -> str:
         [
             "Convert this parsed incident report into the IncidentTriage schema.",
             "Use the provided text as evidence. Do not invent facts, owners, statuses, or resolved actions.",
-            "Set requires_human_review to true unless the evidence is exceptionally complete.",
+            'Use owner "unassigned" unless the incident text explicitly names an owner.',
+            "",
+            "Severity rubric:",
+            "- sev1: broad customer-facing outage, critical flow unavailable, major availability failure, or widespread core service impact.",
+            "- sev2: customer-facing degradation, partial outage, elevated error rates, or important functionality impaired.",
+            "- sev3: internal-only impact, delayed reporting, limited blast radius, or degraded non-critical workflow.",
+            "- sev4: minor issue, no material user impact, cosmetic/manual-process issue, or informational incident.",
+            "",
+            "Evidence requirements:",
+            "- Every severity assessment must include evidence.",
+            "- Every contributing factor must include evidence.",
+            "- Every action item must include evidence from Follow-up Actions when available.",
+            "- supporting_evidence should include at least impact, root_cause, resolution, and timeline evidence where present.",
+            "- Do not return empty evidence arrays for action items or contributing factors.",
+            "- If evidence is missing, omit that item or lower confidence and keep requires_human_review true.",
+            "Keep requires_human_review true unless there is strong evidence and high confidence.",
             "",
             f"Summary: {incident.summary}",
             f"Timeline: {' | '.join(incident.timeline) if incident.timeline else 'not provided'}",

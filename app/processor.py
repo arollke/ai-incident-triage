@@ -157,6 +157,7 @@ def _extract_action_items(incident: ParsedIncident) -> list[ActionItem]:
     return [
         ActionItem(
             description=description,
+            owner="unassigned",
             priority=_action_priority(description),
             status=ActionItemStatus.OPEN,
             evidence=_action_evidence(description, incident),

@@ -1,0 +1,72 @@
+{
+  "model_name": "gpt-4o-mini",
+  "prompt_version": "llm_triage_v1",
+  "run_timestamp_utc": "2026-06-01T13:33:18.690053Z",
+  "total_incidents": 5,
+  "llm_schema_valid_count": 5,
+  "llm_severity_accuracy_against_expected": 0.6,
+  "llm_severity_agreement_with_deterministic": 0.6,
+  "llm_action_item_count_matches_expected": 5,
+  "llm_evidence_present_rate": 1.0,
+  "llm_human_review_rate": 1.0,
+  "llm_owner_hallucination_count": 0,
+  "llm_quality_gates_passed": true,
+  "llm_quality_gate_failures": [],
+  "results": [
+    {
+      "incident": "data_pipeline_delay.md",
+      "llm_schema_valid": true,
+      "llm_severity_matches_expected": true,
+      "llm_severity_matches_deterministic": true,
+      "llm_action_item_count_matches_expected": true,
+      "llm_evidence_present": true,
+      "llm_requires_human_review": true,
+      "owner_hallucination_detected": false,
+      "error": null
+    },
+    {
+      "incident": "failed_deploy_rollback.md",
+      "llm_schema_valid": true,
+      "llm_severity_matches_expected": true,
+      "llm_severity_matches_deterministic": true,
+      "llm_action_item_count_matches_expected": true,
+      "llm_evidence_present": true,
+      "llm_requires_human_review": true,
+      "owner_hallucination_detected": false,
+      "error": null
+    },
+    {
+      "incident": "monitoring_gap.md",
+      "llm_schema_valid": true,
+      "llm_severity_matches_expected": false,
+      "llm_severity_matches_deterministic": false,
+      "llm_action_item_count_matches_expected": true,
+      "llm_evidence_present": true,
+      "llm_requires_human_review": true,
+      "owner_hallucination_detected": false,
+      "error": null
+    },
+    {
+      "incident": "payment_outage.md",
+      "llm_schema_valid": true,
+      "llm_severity_matches_expected": false,
+      "llm_severity_matches_deterministic": false,
+      "llm_action_item_count_matches_expected": true,
+      "llm_evidence_present": true,
+      "llm_requires_human_review": true,
+      "owner_hallucination_detected": false,
+      "error": null
+    },
+    {
+      "incident": "third_party_api_timeout.md",
+      "llm_schema_valid": true,
+      "llm_severity_matches_expected": true,
+      "llm_severity_matches_deterministic": true,
+      "llm_action_item_count_matches_expected": true,
+      "llm_evidence_present": true,
+      "llm_requires_human_review": true,
+      "owner_hallucination_detected": false,
+      "error": null
+    }
+  ]
+}
