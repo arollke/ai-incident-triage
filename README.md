@@ -105,6 +105,9 @@ The LLM eval reports:
 - `llm_human_review_rate`
 - `llm_quality_gates_passed`
 - `llm_quality_gate_failures`
+- `model_name`
+- `prompt_version`
+- `run_timestamp_utc`
 
 ## What It Does
 

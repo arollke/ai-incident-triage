@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Callable
 
@@ -13,6 +14,7 @@ from app.schemas import IncidentTriage
 
 
 DEFAULT_LLM_REPORT_PATH = Path("reports/llm_eval_report.json")
+DEFAULT_PROMPT_VERSION = "llm_triage_v1"
 MIN_LLM_EVIDENCE_PRESENT_RATE = 0.80
 MIN_LLM_HUMAN_REVIEW_RATE = 0.80
 LLMProcessor = Callable[[Path], IncidentTriage | dict]
@@ -32,8 +34,11 @@ class LlmIncidentEvalResult(BaseModel):
 
 
 class LlmEvalReport(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
+    model_name: str
+    prompt_version: str
+    run_timestamp_utc: str
     total_incidents: int
     llm_schema_valid_count: int
     llm_severity_accuracy_against_expected: float = Field(ge=0.0, le=1.0)
@@ -131,6 +136,9 @@ def _build_llm_report(results: list[LlmIncidentEvalResult]) -> LlmEvalReport:
             llm_human_review_rate=0.0,
         )
         return LlmEvalReport(
+            model_name=_llm_model_name(),
+            prompt_version=_llm_prompt_version(),
+            run_timestamp_utc=_utc_timestamp(),
             total_incidents=0,
             llm_schema_valid_count=0,
             llm_severity_accuracy_against_expected=0.0,
@@ -154,6 +162,9 @@ def _build_llm_report(results: list[LlmIncidentEvalResult]) -> LlmEvalReport:
     )
 
     return LlmEvalReport(
+        model_name=_llm_model_name(),
+        prompt_version=_llm_prompt_version(),
+        run_timestamp_utc=_utc_timestamp(),
         total_incidents=total,
         llm_schema_valid_count=llm_schema_valid_count,
         llm_severity_accuracy_against_expected=round(
@@ -184,6 +195,9 @@ def _format_llm_report(report: LlmEvalReport) -> str:
     lines = [
         "LLM Incident Triage Eval Report",
         "===============================",
+        f"model_name: {report.model_name}",
+        f"prompt_version: {report.prompt_version}",
+        f"run_timestamp_utc: {report.run_timestamp_utc}",
         f"total_incidents: {report.total_incidents}",
         f"llm_schema_valid_count: {report.llm_schema_valid_count}",
         (
@@ -262,6 +276,20 @@ def _llm_quality_gate_failures(
         )
 
     return failures
+
+
+def _llm_model_name() -> str:
+    from app.llm_processor import DEFAULT_MODEL
+
+    return os.getenv("INCIDENT_TRIAGE_MODEL", DEFAULT_MODEL)
+
+
+def _llm_prompt_version() -> str:
+    return os.getenv("INCIDENT_TRIAGE_PROMPT_VERSION", DEFAULT_PROMPT_VERSION)
+
+
+def _utc_timestamp() -> str:
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 if __name__ == "__main__":

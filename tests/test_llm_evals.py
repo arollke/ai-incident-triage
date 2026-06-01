@@ -1,5 +1,6 @@
 import json
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -53,6 +54,8 @@ def test_llm_eval_aggregation_works_with_mocked_llm_results():
 
 def test_llm_eval_runner_uses_mocked_llm_processor(monkeypatch, tmp_path):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("INCIDENT_TRIAGE_MODEL", "test-model")
+    monkeypatch.setenv("INCIDENT_TRIAGE_PROMPT_VERSION", "test_prompt_v2")
     report_path = tmp_path / "reports" / "llm_eval_report.json"
 
     def mocked_llm_processor(path: Path) -> IncidentTriage:
@@ -63,6 +66,10 @@ def test_llm_eval_runner_uses_mocked_llm_processor(monkeypatch, tmp_path):
     saved = json.loads(report_path.read_text(encoding="utf-8"))
 
     assert saved == report.model_dump(mode="json")
+    assert report.model_name == "test-model"
+    assert report.prompt_version == "test_prompt_v2"
+    assert report.run_timestamp_utc.endswith("Z")
+    datetime.fromisoformat(report.run_timestamp_utc.replace("Z", "+00:00"))
     assert report.total_incidents == 5
     assert report.llm_schema_valid_count == 5
     assert report.llm_severity_accuracy_against_expected == 1.0
@@ -111,6 +118,9 @@ def test_llm_eval_format_prints_quality_gates():
 
     formatted = _format_llm_report(report)
 
+    assert "model_name: " in formatted
+    assert "prompt_version: llm_triage_v1" in formatted
+    assert "run_timestamp_utc: " in formatted
     assert "LLM Quality Gates" in formatted
     assert "llm_quality_gates_passed: true" in formatted
     assert "llm_quality_gate_failures: none" in formatted
