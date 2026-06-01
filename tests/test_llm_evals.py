@@ -111,6 +111,7 @@ def test_llm_eval_format_prints_quality_gates():
 
     formatted = _format_llm_report(report)
 
+    assert "LLM Quality Gates" in formatted
     assert "llm_quality_gates_passed: true" in formatted
     assert "llm_quality_gate_failures: none" in formatted
 
@@ -136,6 +137,32 @@ def test_llm_eval_main_fails_when_quality_gates_fail(monkeypatch, capsys):
 
     assert exit_code == 1
     assert "llm_quality_gates_passed: false" in captured.out
+    assert captured.err == ""
+
+
+def test_llm_eval_main_fails_when_incident_error_exists(monkeypatch, capsys):
+    report = _build_llm_report(
+        [
+            LlmIncidentEvalResult(
+                incident="one.md",
+                llm_schema_valid=True,
+                llm_severity_matches_expected=True,
+                llm_severity_matches_deterministic=True,
+                llm_action_item_count_matches_expected=True,
+                llm_evidence_present=True,
+                llm_requires_human_review=True,
+                error="provider failed after validation",
+            )
+        ]
+    )
+    monkeypatch.setattr("app.llm_evals.run_llm_evals", lambda: report)
+
+    exit_code = main()
+    captured = capsys.readouterr()
+
+    assert report.llm_quality_gates_passed is True
+    assert exit_code == 1
+    assert "error: provider failed after validation" in captured.out
     assert captured.err == ""
 
 

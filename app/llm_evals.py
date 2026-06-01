@@ -82,7 +82,8 @@ def main() -> int:
         return 1
 
     print(_format_llm_report(report))
-    return 0 if report.llm_quality_gates_passed else 1
+    has_incident_errors = any(result.error for result in report.results)
+    return 0 if not has_incident_errors and report.llm_quality_gates_passed else 1
 
 
 def _evaluate_llm_incident(
@@ -200,8 +201,8 @@ def _format_llm_report(report: LlmEvalReport) -> str:
         f"llm_evidence_present_rate: {report.llm_evidence_present_rate:.2f}",
         f"llm_human_review_rate: {report.llm_human_review_rate:.2f}",
         "",
-        "Quality Gates",
-        "-------------",
+        "LLM Quality Gates",
+        "-----------------",
         f"llm_quality_gates_passed: {str(report.llm_quality_gates_passed).lower()}",
     ]
 

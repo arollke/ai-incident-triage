@@ -92,6 +92,8 @@ OPENAI_API_KEY=... make eval-llm
 
 `make eval-llm` is experimental and is not required for CI. It requires `OPENAI_API_KEY`, calls the LLM processor for each incident, validates the LLM output against the `IncidentTriage` schema, compares LLM output against the expected fixtures, and compares LLM output against deterministic output. It writes `reports/llm_eval_report.json` and prints a readable summary.
 
+LLM evals do not require exact fixture matches. Instead, their quality gates check minimum safety and quality expectations: every LLM output must be schema-valid, at least `0.80` of incidents must include evidence throughout the triage output, and at least `0.80` must keep the human-review-first behavior by setting `requires_human_review`.
+
 The LLM eval reports:
 
 - `total_incidents`
